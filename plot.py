@@ -8,13 +8,19 @@ from pathlib import Path
 from scipy import signal
 import time 
 import fcwt
-
+from convert_to_wav import x2w
 #clear terminal
 os.system('cls' if os.name == 'nt' else 'clear')
 
-def plot_time_domain(wav_obj, channel=0, dpi=100, line_width=0.5):
+import numpy as np
+import matplotlib.pyplot as plt
+import io
+import time
+
+def plot_time_domain(wav_obj, channel=0, line_width=0.5, xlim=None, ylim=None):
     # Get the sample rate and data from the WAV object
     sample_rate, data = wav_obj
+
     # If the data array is one-dimensional, set data_channel to data
     if data.ndim == 1:
         data_channel = data
@@ -22,47 +28,59 @@ def plot_time_domain(wav_obj, channel=0, dpi=100, line_width=0.5):
     else:
         data_channel = data[:, channel]
 
-    print("Creating time axis...")
     # Create a time axis for the data
-    start_time = time.time()
     time_axis = np.arange(len(data_channel)) / float(sample_rate)
-    print(f"Time axis creation took {time.time() - start_time:.2f} seconds")
 
-    print("Creating plot...")
     # Create a figure and plot the data
-    start_time = time.time()
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(10, 6))  # You can adjust the size as needed
     ax.plot(time_axis, data_channel, color='black', linewidth=line_width)
-    print(f"Plot creation took {time.time() - start_time:.2f} seconds")
 
     # Set the x and y labels
     ax.set_xlabel('Time (s)')
     ax.set_ylabel('Amplitude')
 
-    # Set the line width and DPI of the plot
+    # Set default xlim and ylim if not provided
+    if not xlim:
+        xlim = [0, len(data_channel) / float(sample_rate)]
+    if not ylim:
+        min_data = np.min(data_channel)
+        max_data = np.max(data_channel)
+        ylim = [min_data*1.1, max_data*1.1]
+
+    #limit xlim and ylim to 2 decimal places
+    xlim = [round(x, 2) for x in xlim]
+    ylim = [round(y, 2) for y in ylim]
+
+    # Set xlim and ylim
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
+
+    # Set the line width
     for l in ax.lines:
         l.set_linewidth(line_width)
-    fig.set_dpi(dpi)
 
-    print("Converting plot to BytesIO object...")
+    # Tight layout
+    plt.tight_layout()
+
     # Convert the plot to a BytesIO object
-    start_time = time.time()
     buf = io.BytesIO()
-    plt.savefig(buf, format='png', dpi=dpi)
+    plt.savefig(buf, format='svg')
     plt.close(fig)
-    print(f"Plot conversion took {time.time() - start_time:.2f} seconds")
 
     # Reset the buffer's position to the start
     buf.seek(0)
 
-    # Return the BytesIO object
-    return buf
+    # Return the BytesIO object along with the default xlim and ylim values
+    return buf, xlim, ylim
 
 
 
-def plot_frequency_domain(wav_obj, channel=0, dpi=100, n_fft=2048, hop_length=512):
+
+
+def plot_frequency_domain(wav_obj, channel=0, dpi=100, n_fft=2048, hop_length=512, xlim=None, ylim=None, cbar_lim=None):
     # Get the sample rate and data from the WAV object
     sample_rate, data = wav_obj
+
     # If the data array is one-dimensional, set data_channel to data
     if data.ndim == 1:
         data_channel = data
@@ -70,45 +88,51 @@ def plot_frequency_domain(wav_obj, channel=0, dpi=100, n_fft=2048, hop_length=51
     else:
         data_channel = data[:, channel]
 
-    print("Computing STFT...")
     # Compute the STFT of the data
-    start_time = time.time()
     f, t, Zxx = signal.stft(data_channel, sample_rate, nperseg=n_fft, noverlap=hop_length)
-    print(f"STFT computation took {time.time() - start_time:.2f} seconds")
 
-    print("Creating plot...")
+    # Calculate the original xlim, ylim, and cbar_lim
+    original_xlim = [0, t[-1]]
+    original_ylim = [0, f[-1]]
+    original_cbar_lim = [np.abs(Zxx).min(), np.abs(Zxx).max()]
+
     # Create a figure and plot the STFT
-    start_time = time.time()
-    fig, ax = plt.subplots()
-    pcm = ax.pcolormesh(t, f, np.abs(Zxx), cmap='viridis', shading='gouraud')
-    print(f"Plot creation took {time.time() - start_time:.2f} seconds")
+    fig, ax = plt.subplots(figsize=(10, 6))  # Adjust the size as needed
+    fig.set_dpi(dpi)
+
+    # Use the original or provided cbar_lim for the color map
+    cbar_lim = cbar_lim or original_cbar_lim
+    pcm = ax.pcolormesh(t, f, np.abs(Zxx), cmap='viridis', shading='gouraud', rasterized=True, vmin=cbar_lim[0], vmax=cbar_lim[1])
 
     # Set the x and y labels
     ax.set_xlabel('Time (s)')
     ax.set_ylabel('Frequency (Hz)')
 
+    # Use the original or provided xlim and ylim
+    xlim = xlim or original_xlim
+    ylim = ylim or original_ylim
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
+
     # Set the colorbar
     fig.colorbar(pcm, ax=ax)
 
-    # Set the DPI of the plot
-    fig.set_dpi(dpi)
-
-    print("Converting plot to BytesIO object...")
     # Convert the plot to a BytesIO object
-    start_time = time.time()
     buf = io.BytesIO()
-    plt.savefig(buf, format='png', dpi=dpi)
+    plt.savefig(buf, format='svg', dpi=dpi)
     plt.close(fig)
-    print(f"Plot conversion took {time.time() - start_time:.2f} seconds")
 
     # Reset the buffer's position to the start
     buf.seek(0)
 
-    # Return the BytesIO object
-    return buf
+    # Return the BytesIO object along with the original xlim, ylim, and cbar_lim values
+    return buf, original_xlim, original_ylim, original_cbar_lim
 
 
-def plot_cwt(wav_obj, channel=0, dpi=100, wavelet='morl', scales=np.arange(1, 400)):
+
+
+
+def plot_cwt(wav_obj, channel=0, wavelet='morl', scales=np.arange(1, 400)):
     # Get the sample rate and data from the WAV object
     sample_rate, data = wav_obj
     # If the data array is one-dimensional, set data_channel to data
@@ -139,13 +163,13 @@ def plot_cwt(wav_obj, channel=0, dpi=100, wavelet='morl', scales=np.arange(1, 40
     fig.colorbar(cwt_img, ax=ax)
 
     # Set the DPI of the plot
-    fig.set_dpi(dpi)
+    
 
     print("Converting plot to BytesIO object...")
     # Convert the plot to a BytesIO object
     start_time = time.time()
     buf = io.BytesIO()
-    plt.savefig(buf, format='png', dpi=dpi)
+    plt.savefig(buf, format='svg')
     plt.close(fig)
     print(f"Plot conversion took {time.time() - start_time:.2f} seconds")
 
@@ -156,7 +180,7 @@ def plot_cwt(wav_obj, channel=0, dpi=100, wavelet='morl', scales=np.arange(1, 40
     return buf
 
 
-def plot_fcwt(wav_obj, channel=0, dpi=100, f0=0.1, f1=5, fn=100):
+def plot_fcwt(wav_obj, channel=0, f0=0.1, f1=5, fn=100):
     # Get the sample rate and data from the WAV object
     sample_rate, data = wav_obj
     # If the data array is one-dimensional, set data_channel to data
@@ -196,13 +220,13 @@ def plot_fcwt(wav_obj, channel=0, dpi=100, f0=0.1, f1=5, fn=100):
     fig.colorbar(cwt_img, ax=ax)
 
     # Set the DPI of the plot
-    fig.set_dpi(dpi)
+    
     
     print("Converting plot to BytesIO object...")
     # Convert the plot to a BytesIO object
     start_time = time.time()
     buf = io.BytesIO()
-    plt.savefig(buf, format='png', dpi=dpi)
+    plt.savefig(buf, format='svg')
 
     plt.close(fig)
     print(f"Plot conversion took {time.time() - start_time:.2f} seconds")
@@ -219,7 +243,12 @@ import os
 from pathlib import Path
 
 # Define the input file path and output folder
-input_file = Path('/home/szymon/coding/MSI_Project/output_wav_files/sine3.wav')
+input_file = Path('/home/szymon/coding/MSI_Project/datastore/borg.wav') 
+
+conv_file = Path('/home/szymon/coding/MSI_Project/datastore/borg2.wav')
+
+x2w(input_file, conv_file)
+
 output_folder = 'output_plots'
 
 # Create the output folder if it doesn't exist
@@ -227,31 +256,37 @@ if not os.path.exists(output_folder):
     os.makedirs(output_folder)
 
 # Load the WAV file
-sample_rate, data = wavfile.read(input_file)
+
+sample_rate, data = wavfile.read(conv_file)
 
 
 
-# Plot the time domain waveform and save the plot to a file
-time_plot_file = os.path.join(output_folder, 'time_domain.png')
-time_plot = plot_time_domain((sample_rate, data))
-with open(time_plot_file, 'wb') as f:
-    f.write(time_plot.getbuffer())
+# # Plot the time domain waveform and save the plot to a file
+# time_plot_file = os.path.join(output_folder, 'time_domain.svg')
+# time_plot, xlim, ylim = plot_time_domain((sample_rate, data),xlim=(0, 0.02), channel=1)
+# print(xlim)
+# print(ylim)
+# with open(time_plot_file, 'wb') as f:
+#     f.write(time_plot.getbuffer())
 
 # Plot the frequency domain spectrogram and save the plot to a file
-freq_plot_file = os.path.join(output_folder, 'frequency_domain.png')
-freq_plot = plot_frequency_domain((sample_rate, data))
+freq_plot_file = os.path.join(output_folder, 'frequency_domain.svg')
+freq_plot, xlim, ylim, clim = plot_frequency_domain((sample_rate, data), xlim=(4, 8), ylim=(0, 4000), cbar_lim=(0.1, 0.2))
+print(xlim)
+print(ylim)
+print(clim)
 with open(freq_plot_file, 'wb') as f:
     f.write(freq_plot.getbuffer())
 
-# Plot the CWT and save the plot to a file
-cwt_plot_file = os.path.join(output_folder, 'cwt.png')
-cwt_plot = plot_cwt((sample_rate, data))
-with open(cwt_plot_file, 'wb') as f:
-    f.write(cwt_plot.getbuffer())
+# # Plot the CWT and save the plot to a file
+# cwt_plot_file = os.path.join(output_folder, 'cwt.svg')
+# cwt_plot = plot_cwt((sample_rate, data))
+# with open(cwt_plot_file, 'wb') as f:
+#     f.write(cwt_plot.getbuffer())
 
 
-# Plot the FCWT and save the plot to a file
-fcwt_plot_file = os.path.join(output_folder, 'fcwt.png')
-fcwt_plot = plot_fcwt((sample_rate, data))
-with open(fcwt_plot_file, 'wb') as f:
-    f.write(fcwt_plot.getbuffer())
+# # Plot the FCWT and save the plot to a file
+# fcwt_plot_file = os.path.join(output_folder, 'fcwt.svg')
+# fcwt_plot = plot_fcwt((sample_rate, data))
+# with open(fcwt_plot_file, 'wb') as f:
+#     f.write(fcwt_plot.getbuffer())

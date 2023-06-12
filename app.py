@@ -6,8 +6,8 @@ import numpy as np
 from io import BytesIO
 from flask import send_file
 from pydub import AudioSegment
-
-
+from werkzeug.utils import secure_filename
+from convert_to_wav import convert_to_wav
 
 app = Flask(__name__)
 
@@ -28,8 +28,14 @@ def allowed_file(filename):
 def set_sampling_frequency(filename):
     if request.method == 'POST':
         sampling_frequency = float(request.form['sampling_frequency'])
-        return redirect(url_for('display_data', filename=filename, sampling_frequency=sampling_frequency))
-    return render_template('set_sampling_frequency.html', filename=filename)
+        input_file = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        output_file = os.path.join(app.config['UPLOAD_FOLDER'], filename.split('.')[0] + '.wav')
+        convert_to_wav(input_file, output_file, sampling_rate=sampling_frequency)
+        return redirect(url_for('display_data', filename=output_file))
+    else:
+        # Set a default sampling frequency for user input
+        default_frequency = 44100
+        return render_template('set_sampling_frequency.html', filename=filename, default_frequency=default_frequency)
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -46,12 +52,18 @@ def upload_file():
 
         if file and allowed_file(file.filename):
             # Save the file to the upload folder
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
-            # Redirect to another route for processing the uploaded file (e.g., display_data)
-            return redirect(url_for('set_sampling_frequency', filename=file.filename))
-        else:
-            file = None
-
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            input_file = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            output_file = os.path.join(app.config['UPLOAD_FOLDER'], filename.split('.')[0] + '.wav')
+            
+            try:
+                convert_to_wav(input_file, output_file)
+            except ValueError:
+                # Redirect to set_sampling_frequency if ValueError (no sampling frequency) is raised
+                return redirect(url_for('set_sampling_frequency', filename=filename))
+                
+            return redirect(url_for('display_data', filename=output_file))
     return render_template('upload.html')
 
 

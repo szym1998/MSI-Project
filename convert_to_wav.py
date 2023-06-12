@@ -6,7 +6,7 @@ from pydub import AudioSegment
 
 
 
-def convert_to_wav(input_file, output_file, sampling_rate=None):
+def x2w(input_file, output_file, sampling_rate=None):
     file_ext = os.path.splitext(input_file)[1].lower()
 
     if file_ext in {'.csv', '.txt'}:
@@ -18,10 +18,17 @@ def convert_to_wav(input_file, output_file, sampling_rate=None):
         mat = loadmat(input_file)
         data = mat[list(mat.keys())[-1]]
     elif file_ext == '.wav':
-        _, data = wavfile.read(input_file)
-        
-        if sampling_rate is None:
-            sampling_rate = wavfile.read(input_file)[0]
+        try:
+            _, data = wavfile.read(input_file)
+            if sampling_rate is None:
+                sampling_rate = wavfile.read(input_file)[0]
+        except ValueError:
+            audio = AudioSegment.from_file(input_file)
+            if sampling_rate is None:
+                sampling_rate = audio.frame_rate
+            channels = audio.channels
+            data = np.array(audio.get_array_of_samples()).reshape((-1, channels))
+
     elif file_ext == '.mp3':
         audio = AudioSegment.from_file(input_file)
         if sampling_rate is None:
@@ -48,3 +55,7 @@ def convert_to_wav(input_file, output_file, sampling_rate=None):
     wavfile.write(output_file, sampling_rate, data.astype(dtype))
     print("Saved WAV file:", output_file)
 
+
+
+
+x2w('/home/szymon/coding/MSI_Project/datastore/borg.wav', '/home/szymon/coding/MSI_Project/datastore/borg2.wav')
