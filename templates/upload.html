@@ -1,37 +1,56 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
-  <head>
-    <title>File Upload</title>
+<head>
     <style>
-      /* Add some basic styling for the drop area */
-      #drop-area {
-        width: 100%;
-        height: 200px;
-        border: 2px dashed #ccc;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 20px;
-      }
-      #drop-area:hover {
-        background-color: #f8f8f8;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>Data Preview App</h1>
-    <div id="drop-area">
-      <form action="{{ url_for('upload_file') }}" method="POST" enctype="multipart/form-data">
-        <input type="file" name="file" id="fileElem" multiple accept=".csv,.mat,.txt" style="display:none" onchange="handleFiles(this.files)">
-        <label class="button" for="fileElem">Select or drag and drop files</label>
-      </form>
-    </div>
-    <script>
-      function handleFiles(files) {
-        if (files.length) {
-          document.querySelector("form").submit();
+        * {
+            box-sizing: border-box;
         }
-      }
-    </script>
-  </body>
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f1f1f1;
+        }
+
+        .form-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 100px;
+        }
+
+        .form-container form {
+            margin-bottom: 20px;
+        }
+
+        .form-container input[type="file"] {
+            margin-bottom: 20px;
+        }
+
+        .form-container input[type="submit"],
+        .form-container a {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .form-container input[type="submit"]:hover,
+        .form-container a:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <form action="{{ url_for('analysis_up') }}" method="POST" enctype="multipart/form-data">
+            <input type="file" name="file">
+            <input type="submit"/>
+        </form>
+        <a href="{{ url_for('analysis_up') }}">Return to Analysis</a>
+    </div>
+</body>
 </html>
+

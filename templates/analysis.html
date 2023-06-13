@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f1f1f1;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            flex: 1;
+            background-color: #f8f9fa;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar form {
+            margin-bottom: 20px;
+        }
+
+        .sidebar select,
+        .sidebar input[type="radio"],
+        .sidebar input[type="submit"] {
+            margin-bottom: 10px;
+        }
+
+        .sidebar input[type="submit"],
+        .sidebar input[type="button"] {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        .sidebar input[type="submit"]:hover,
+        .sidebar input[type="button"]:hover {
+            background-color: #45a049;
+        }
+
+        .main {
+            flex: 2;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 10px;
+            padding: 20px;
+        }
+
+        .graph {
+            border: 1px solid #ccc;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <form action="/analysis" method="POST">
+                <select name="file">
+                    {% for file in files %}
+                        <option value="{{ file }}">{{ file }}</option>
+                    {% endfor %}
+                </select>
+                <br>
+                <input type="radio" name="method" value="time_domain"> Time Domain<br>
+                <input type="radio" name="method" value="stft"> STFT<br>
+                <input type="radio" name="method" value="fcwt"> FCWT<br>
+                <input type="radio" name="method" value="fft"> FFT<br>
+                <br>
+                <input type="submit" value="Submit"/>
+            </form>
+            <form action="{{ url_for('upload_file') }}" method="GET">
+                <input type="submit" value="Upload a file"/>
+            </form>
+            
+        </div>
+        <div class="main">
+            <div class="graph">
+                {% if image_string_time_domain %}
+                    <img src="data:image/svg+xml;base64,{{image_string_time_domain}}">
+                {% endif %}
+            </div>
+            <div class="graph">
+                {% if image_string_stft %}
+                    <img src="data:image/svg+xml;base64,{{image_string_stft}}">
+                {% endif %}
+            </div>
+            <div class="graph">
+                {% if image_string_fcwt %}
+                    <img src="data:image/svg+xml;base64,{{image_string_fcwt}}">
+                {% endif %}
+            </div>
+            <div class="graph">
+                {% if image_string_fft %}
+                    <img src="data:image/svg+xml;base64,{{image_string_fft}}">
+                {% endif %}
+            </div>            
+        </div>
+    </div>
+</body>
+</html>

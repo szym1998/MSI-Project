@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f1f1f1;
+        }
+
+        .error-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #ff0000;
+            color: #ffffff;
+            text-align: center;
+        }
+
+        .error-container h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .error-container p {
+            font-size: 24px;
+            margin-bottom: 40px;
+        }
+
+        .error-container a {
+            padding: 10px;
+            background-color: #ffffff;
+            color: #ff0000;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 18px;
+        }
+
+        .error-container a:hover {
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <h1>Error</h1>
+        <p>{{ message }}</p>
+        <a href="{{ url_for('analysis_up') }}">Return to Analysis</a>
+    </div>
+</body>
+</html>
