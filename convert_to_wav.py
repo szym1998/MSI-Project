@@ -6,7 +6,7 @@ from pydub import AudioSegment
 
 
 
-def x2w(input_file, output_file, sampling_rate=None):
+def x2w(input_file, sampling_rate=None):
     file_ext = os.path.splitext(input_file)[1].lower()
 
     if file_ext in {'.csv', '.txt'}:
@@ -51,11 +51,6 @@ def x2w(input_file, output_file, sampling_rate=None):
     else:
         dtype = 'float32'
 
-    # Save the data as a WAV file
-    wavfile.write(output_file, sampling_rate, data.astype(dtype))
-    print("Saved WAV file:", output_file)
-
-
-
-
-x2w('/home/szymon/coding/MSI_Project/datastore/borg.wav', '/home/szymon/coding/MSI_Project/datastore/borg2.wav')
+    #return wav object together
+    return sampling_rate, data.astype(dtype)
+    
