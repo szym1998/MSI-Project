@@ -76,57 +76,87 @@ def receive_file():
     return redirect(url_for('analysis'))
 
 
-def get_image_string(plot_function, file_path):
-    result = plot_function(file_path)
+def get_image_string(plot_function, file_path, *args):
+    if plot_function.__name__ == 'plot_td':
+        print(*args[:2])
+        result = plot_function(file_path, *args[:2])
+    elif plot_function.__name__ == 'plot_stft':
+        print(*args[2:7])
+        result = plot_function(file_path, *args[2:7])
+    elif plot_function.__name__ == 'plot_fcwt':
+        print(*args[7:14])
+        result = plot_function(file_path, *args[7:14])
+    elif plot_function.__name__ == 'plot_fft':
+        print(*args[14:])
+        result = plot_function(file_path, *args[14:])
+    else:
+        result = plot_function(file_path)  # Fallback if the plot function doesn't match any specific condition
     return result
+
+
 
 @app.route('/analysis', methods=['GET', 'POST'])
 def analysis():
     file_path = request.form.get('file')
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], file_path)
 
+    def get_floats_or_none(input_str):
+        if not input_str:
+            return None
+        else:
+            return [float(value) if value else None for value in input_str.split(',')]
+
     time_domain_xlim_str = request.form.get('time_domain_xlim')
-    time_domain_xlim = [float(value) if value else None for value in time_domain_xlim_str.split(',')]
+    time_domain_xlim = get_floats_or_none(time_domain_xlim_str)
 
     time_domain_ylim_str = request.form.get('time_domain_ylim')
-    time_domain_ylim = [float(value) if value else None for value in time_domain_ylim_str.split(',')]
+    time_domain_ylim = get_floats_or_none(time_domain_ylim_str)
 
     stft_xlim_str = request.form.get('stft_xlim')
-    stft_xlim = [float(value) if value else None for value in stft_xlim_str.split(',')]
+    stft_xlim = get_floats_or_none(stft_xlim_str)
 
     stft_ylim_str = request.form.get('stft_ylim')
-    stft_ylim = [float(value) if value else None for value in stft_ylim_str.split(',')]
+    stft_ylim = get_floats_or_none(stft_ylim_str)
 
     stft_cbar_lim_str = request.form.get('stft_cbar_lim')
-    stft_cbar_lim = [float(value) if value else None for value in stft_cbar_lim_str.split(',')]
-
-    stft_n_fft = float(request.form.get('stft_n_fft')) if request.form.get('stft_n_fft') else None
-    stft_hop_length = float(request.form.get('stft_hop_length')) if request.form.get('stft_hop_length') else None
+    stft_cbar_lim = get_floats_or_none(stft_cbar_lim_str)
 
     fcwt_f0_f1_str = request.form.get('fcwt_f0_f1')
-    fcwt_f0_f1 = [float(value) if value else None for value in fcwt_f0_f1_str.split(',')]
+    fcwt_f0_f1 = get_floats_or_none(fcwt_f0_f1_str)
 
     fcwt_xlim_str = request.form.get('fcwt_xlim')
-    fcwt_xlim = [float(value) if value else None for value in fcwt_xlim_str.split(',')]
+    fcwt_xlim = get_floats_or_none(fcwt_xlim_str)
 
     fcwt_ylim_str = request.form.get('fcwt_ylim')
-    fcwt_ylim = [float(value) if value else None for value in fcwt_ylim_str.split(',')]
+    fcwt_ylim = get_floats_or_none(fcwt_ylim_str)
 
     fcwt_clim_str = request.form.get('fcwt_clim')
-    fcwt_clim = [float(value) if value else None for value in fcwt_clim_str.split(',')]
-
-    fcwt_fn = float(request.form.get('fcwt_fn')) if request.form.get('fcwt_fn') else None
-    fcwt_mor_size = float(request.form.get('fcwt_mor_size')) if request.form.get('fcwt_mor_size') else None
+    fcwt_clim = get_floats_or_none(fcwt_clim_str)
 
     fft_xlim_str = request.form.get('fft_xlim')
-    fft_xlim = [float(value) if value else None for value in fft_xlim_str.split(',')]
+    fft_xlim = get_floats_or_none(fft_xlim_str)
 
     fft_ylim_str = request.form.get('fft_ylim')
-    fft_ylim = [float(value) if value else None for value in fft_ylim_str.split(',')]
+    fft_ylim = get_floats_or_none(fft_ylim_str)
 
 
 
-    print(fcwt_f0_f1)
+    if fcwt_f0_f1 is None or len(fcwt_f0_f1) < 2:
+        f0 = None
+        f1 = None
+    else:
+        
+        f0 = fcwt_f0_f1[0]
+        f1 = fcwt_f0_f1[1]
+    
+    def get_int_or_none(input_str):
+        return int(float(input_str)) if input_str else None
+
+    stft_n_fft = get_int_or_none(request.form.get('stft_n_fft'))
+    stft_hop_length = get_int_or_none(request.form.get('stft_hop_length'))
+
+    fcwt_fn = get_int_or_none(request.form.get('fcwt_fn'))
+    fcwt_mor_size = get_int_or_none(request.form.get('fcwt_mor_size'))
 
     # Get the list of WAV files
     wav_files = sorted([f for f in os.listdir(app.config['UPLOAD_FOLDER']) if f.endswith('.wav')])
@@ -134,9 +164,19 @@ def analysis():
     # Create a multiprocessing Pool
     pool = Pool(processes=4)
 
+    
+
     # Use pool.apply_async to run the plot methods in parallel, getting a multiprocessing.pool.AsyncResult for each one
-    results = [pool.apply_async(get_image_string, args=(plot_function, file_path)) for plot_function in (
-        plots.plot_td, plots.plot_stft, plots.plot_fcwt, plots.plot_fft)]
+    results = [
+        pool.apply_async(get_image_string, args=(plot_function, file_path, time_domain_xlim, time_domain_ylim, stft_n_fft, stft_hop_length, stft_xlim, stft_ylim, stft_cbar_lim, f0, f1, fcwt_fn, fcwt_mor_size, fcwt_xlim, fcwt_ylim, fcwt_clim, fft_xlim, fft_ylim))
+        for plot_function in (
+            plots.plot_td,
+            plots.plot_stft,
+            plots.plot_fcwt,
+            plots.plot_fft
+        )
+    ]
+
 
     # Close the pool to prevent any more tasks from being submitted to the pool.
     pool.close()

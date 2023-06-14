@@ -13,18 +13,25 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 
 
-def plot_td(path_to_file, channel=0, line_width=0.5, xlim=None, ylim=None):
+def plot_td(path_to_file, xlim=None, ylim=None):
+    channel=0
+    line_width=0.5
+    dpi = 100
     # Get the sample rate and data from the WAV object
     sample_rate, data = x2w(path_to_file)
     og_xlim = (0, len(data) / sample_rate)
     og_ylim = [-1, 1]
 
-    # If the data array is one-dimensional, set data_channel to data
-    if data.ndim == 1:
-        data_channel = data
-    # Otherwise, extract the specified channel from the data array
-    else:
-        data_channel = data[:, channel]
+    
+
+    if xlim == [None] or None:        
+        xlim = og_xlim
+    if ylim == [None] or None:
+        ylim = og_ylim
+
+    
+    data_channel = data
+    
     
     #normalize data
     data_channel = data_channel / np.max(np.abs(data_channel))
@@ -52,9 +59,7 @@ def plot_td(path_to_file, channel=0, line_width=0.5, xlim=None, ylim=None):
     
     
 
-    #limit xlim and ylim to 2 decimal places
-    xlim = [round(x, 2) for x in xlim]
-    ylim = [round(y, 2) for y in ylim]
+    
 
     # Set xlim and ylim
     ax.set_xlim(xlim)
@@ -89,16 +94,10 @@ def plot_td(path_to_file, channel=0, line_width=0.5, xlim=None, ylim=None):
     return result
 
 
-def plot_stft(
-    path_to_file,
-    channel=0,
-    dpi=100,
-    n_fft=None,
-    hop_length=None,
-    xlim=None,
-    ylim=None,
-    cbar_lim=None,
-):
+def plot_stft(path_to_file, n_fft=None, hop_length=None, xlim=None, ylim=None, cbar_lim=None):
+    dpi=100
+
+    
     # Get the sample rate and data from the WAV object
     sample_rate, data = x2w(path_to_file)
 
@@ -126,12 +125,9 @@ def plot_stft(
     if hop_length > n_fft:
         hop_length = n_fft // 1.1
 
-    # If the data array is one-dimensional, set data_channel to data
-    if data.ndim == 1:
-        data_channel = data
-    # Otherwise, extract the specified channel from the data array
-    else:
-        data_channel = data[:, channel]
+    
+    data_channel = data
+    
 
     # Compute the STFT of the data
     f, t, Zxx = signal.stft(
@@ -197,7 +193,8 @@ def plot_stft(
     return result
 
 
-def plot_fcwt(path_to_file, channel=0, f0=None, f1=None, fn=None, dpi=100, mor_size=None, xlim=None, ylim=None, clim=None):
+def plot_fcwt(path_to_file, f0=None, f1=None, fn=None, mor_size=None, xlim=None, ylim=None, clim=None):
+    dpi=100
     # Get the sample rate and data from the WAV object
     sample_rate, data = x2w(path_to_file)
 
@@ -222,12 +219,9 @@ def plot_fcwt(path_to_file, channel=0, f0=None, f1=None, fn=None, dpi=100, mor_s
     if f0 is None:
         f0 = 1
 
-    # If the data array is one-dimensional, set data_channel to data
-    if data.ndim == 1:
-        data_channel = data
-    # Otherwise, extract the specified channel from the data array
-    else:
-        data_channel = data[:, channel]
+    
+    data_channel = data
+    
 
     # Compute the FCWT of the data
     morl = fcwt.Morlet(mor_size)
@@ -293,16 +287,15 @@ def plot_fcwt(path_to_file, channel=0, f0=None, f1=None, fn=None, dpi=100, mor_s
     return result
 
 
-def plot_fft(path_to_file, channel=0, dpi=100, xlim=None, ylim=None):
+def plot_fft(path_to_file, xlim=None, ylim=None):
+    dpi=100
     # Get the sample rate and data from the WAV object
     sample_rate, data = x2w(path_to_file)
 
     # If the data array is one-dimensional, set data_channel to data
-    if data.ndim == 1:
-        data_channel = data
-    # Otherwise, extract the specified channel from the data array
-    else:
-        data_channel = data[:, channel]
+    
+    data_channel = data
+    
 
     # Compute the FFT of the data
     freqs = np.fft.rfftfreq(len(data_channel), 1/sample_rate)

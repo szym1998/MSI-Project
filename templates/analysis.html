@@ -340,11 +340,12 @@
         var nfft_stft_var = {{ nfft_stft | safe }};
         var hop_length_stft_var = {{ hop_length_stft | safe }};
         var xlim_fcwt_var = {{ xlim_fcwt | safe }};
-        var ylim_fcwt_var = {{ ylim_fcwt | safe }};
+        
         var clim_fcwt_var = {{ clim_fcwt | safe }};
         var f1_fcwt_var = {{ f1_fcwt | safe }};
         var xlim_fft_var = {{ xlim_fft | safe }};
         var ylim_fft_var = {{ ylim_fft | safe }};
+        var ylim_fcwt_var = [0, f1_fcwt_var];
 
 
         var sliderConfigs = [
@@ -359,7 +360,7 @@
             { id: 'fcwt_xlim', startValue: xlim_fcwt_var, range: xlim_fcwt_var, singleValue: false },
             { id: 'fcwt_ylim', startValue: ylim_fcwt_var, range: ylim_fcwt_var, singleValue: false },
             { id: 'fcwt_clim', startValue: clim_fcwt_var, range: clim_fcwt_var, singleValue: false },
-            { id: 'fcwt_fn', startValue: f1_fcwt_var, range: [0, 100], singleValue: true },
+            { id: 'fcwt_fn', startValue: f1_fcwt_var, range: [0, 1000], singleValue: true },
             { id: 'fcwt_mor_size', startValue: 5, range: [0, 50], singleValue: true },
             { id: 'fft_xlim', startValue: xlim_fft_var, range: xlim_fft_var, singleValue: false },
             { id: 'fft_ylim', startValue: ylim_fft_var, range: ylim_fft_var, singleValue: false },
