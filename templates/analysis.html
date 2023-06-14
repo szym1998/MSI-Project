@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <style>
         * {
@@ -66,52 +67,310 @@
             align-items: center;
             background-color: #fff;
         }
+
+        .noUi-target {
+            height: 10px !important;
+            /* Adjust the height as desired */
+        }
+
+        .noUi-base .noUi-connect {
+            height: 100% !important;
+            background: #4c89af;
+            /* Slider color */
+        }
+
+        .noUi-base .noUi-handle {
+            width: 25px !important;
+            /* Adjust the width as desired */
+            height: 20px !important;
+            /* Adjust the height as desired */
+            border-radius: 10%;
+            /* Rounded handle */
+            background: #4c89af;
+            /* Handle color */
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+            /* Optional: Add a box shadow to the handle */
+        }
+
+        .noUi-handle:after,
+        .noUi-handle:before {
+            content: "";
+            display: block;
+            position: absolute;
+            height: 4px !important;
+            width: 1px !important;
+            background: #E8E7E6;
+            left: 6px;
+            top: 4px;
+        }
+
+        .settings .slider-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            /* Optional: Add some space between the elements */
+        }
+
+        .settings .slider {
+            flex-grow: 1;
+        }
+
+        .settings .slider-value {
+            margin-left: 10px;
+            /* Optional: Add some space between the slider and value */
+        }
     </style>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nouislider@14.6.3/distribute/nouislider.min.css">
 </head>
+
 <body>
     <div class="container">
         <div class="sidebar">
             <form action="/analysis" method="POST">
                 <select name="file">
                     {% for file in files %}
-                        <option value="{{ file }}">{{ file }}</option>
+                    <option value="{{ file }}">{{ file }}</option>
                     {% endfor %}
                 </select>
                 <br>
-                <input type="radio" name="method" value="time_domain"> Time Domain<br>
-                <input type="radio" name="method" value="stft"> STFT<br>
-                <input type="radio" name="method" value="fcwt"> FCWT<br>
-                <input type="radio" name="method" value="fft"> FFT<br>
+
+                <div id="time_domain_settings" class="settings">
+                    <h3>Time Domain Settings</h3>
+                    <div class="slider-container">
+                        <label for="time_domain_xlim">Xlim:</label>
+                        <div class="slider">
+                            <div id="time_domain_xlim"></div>
+                            <input type="hidden" id="time_domain_xlim_value" name="time_domain_xlim">
+                        </div>
+                        <p id="time_domain_xlim_display" class="slider-value"></p>
+                    </div>
+                    <div class="slider-container">
+                        <label for="time_domain_ylim">Ylim:</label>
+                        <div class="slider">
+                            <div id="time_domain_ylim"></div>
+                            <input type="hidden" id="time_domain_ylim_value" name="time_domain_ylim">
+                        </div>
+                        <p id="time_domain_ylim_display" class="slider-value"></p>
+                    </div>
+                </div>
+
+                <div id="stft_settings" class="settings">
+                    <h3>STFT Settings</h3>
+                    <div class="slider-container">
+                        <label for="stft_xlim">Xlim:</label>
+                        <div class="slider">
+                            <div id="stft_xlim"></div>
+                            <input type="hidden" id="stft_xlim_value" name="stft_xlim">
+                        </div>
+                        <p id="stft_xlim_display" class="slider-value"></p>
+                    </div>
+                    <div class="slider-container">
+                        <label for="stft_ylim">Ylim:</label>
+                        <div class="slider">
+                            <div id="stft_ylim"></div>
+                            <input type="hidden" id="stft_ylim_value" name="stft_ylim">
+                        </div>
+                        <p id="stft_ylim_display" class="slider-value"></p>
+                    </div>
+                    <div class="slider-container">
+                        <label for="stft_cbar_lim">Cbar Lim:</label>
+                        <div class="slider">
+                            <div id="stft_cbar_lim"></div>
+                            <input type="hidden" id="stft_cbar_lim_value" name="stft_cbar_lim">
+                        </div>
+                        <p id="stft_cbar_lim_display" class="slider-value"></p>
+                    </div>
+                    <div class="slider-container">
+                        <label for="stft_n_fft">n_fft:</label>
+                        <div class="slider">
+                            <div id="stft_n_fft"></div>
+                            <input type="hidden" id="stft_n_fft_value" name="stft_n_fft">
+                        </div>
+                        <p id="stft_n_fft_display" class="slider-value"></p>
+                    </div>
+                    <div class="slider-container">
+                        <label for="stft_hop_length">hop_length:</label>
+                        <div class="slider">
+                            <div id="stft_hop_length"></div>
+                            <input type="hidden" id="stft_hop_length_value" name="stft_hop_length">
+                        </div>
+                        <p id="stft_hop_length_display" class="slider-value"></p>
+                    </div>
+                </div>
+
+                <div id="fcwt_settings" class="settings">
+                    <h3>FCWT Settings</h3>
+                    <div class="slider-container">
+                        <label for="fcwt_f0_f1">F0 and F1:</label>
+                        <div class="slider">
+                            <div id="fcwt_f0_f1"></div>
+                            <input type="hidden" id="fcwt_f0_f1_value" name="fcwt_f0_f1">
+                        </div>
+                        <p id="fcwt_f0_f1_display" class="slider-value"></p>
+                    </div>
+                    <div class="slider-container">
+                        <label for="fcwt_xlim">Xlim:</label>
+                        <div class="slider">
+                            <div id="fcwt_xlim"></div>
+                            <input type="hidden" id="fcwt_xlim_value" name="fcwt_xlim">
+                        </div>
+                        <p id="fcwt_xlim_display" class="slider-value"></p>
+                    </div>
+                    <div class="slider-container">
+                        <label for="fcwt_ylim">Ylim:</label>
+                        <div class="slider">
+                            <div id="fcwt_ylim"></div>
+                            <input type="hidden" id="fcwt_ylim_value" name="fcwt_ylim">
+                        </div>
+                        <p id="fcwt_ylim_display" class="slider-value"></p>
+                    </div>
+                    <div class="slider-container">
+                        <label for="fcwt_clim">Clim:</label>
+                        <div class="slider">
+                            <div id="fcwt_clim"></div>
+                            <input type="hidden" id="fcwt_clim_value" name="fcwt_clim">
+                        </div>
+                        <p id="fcwt_clim_display" class="slider-value"></p>
+                    </div>
+                    <div class="slider-container">
+                        <label for="fcwt_fn">fn:</label>
+                        <div class="slider">
+                            <div id="fcwt_fn"></div>
+                            <input type="hidden" id="fcwt_fn_value" name="fcwt_fn">
+                        </div>
+                        <p id="fcwt_fn_display" class="slider-value"></p>
+                    </div>
+                    <div class="slider-container">
+                        <label for="fcwt_mor_size">mor_size:</label>
+                        <div class="slider">
+                            <div id="fcwt_mor_size"></div>
+                            <input type="hidden" id="fcwt_mor_size_value" name="fcwt_mor_size">
+                        </div>
+                        <p id="fcwt_mor_size_display" class="slider-value"></p>
+                    </div>
+                </div>
+
+                <div id="fft_settings" class="settings">
+                    <h3>FFT Settings</h3>
+                    <div class="slider-container">
+                        <label for="fft_xlim">Xlim:</label>
+                        <div class="slider">
+                            <div id="fft_xlim"></div>
+                            <input type="hidden" id="fft_xlim_value" name="fft_xlim">
+                        </div>
+                        <p id="fft_xlim_display" class="slider-value"></p>
+                    </div>
+                    <div class="slider-container">
+                        <label for="fft_ylim">Ylim:</label>
+                        <div class="slider">
+                            <div id="fft_ylim"></div>
+                            <input type="hidden" id="fft_ylim_value" name="fft_ylim">
+                        </div>
+                        <p id="fft_ylim_display" class="slider-value"></p>
+                    </div>
+                </div>
+
+
+
+
+
+                <!-- Add additional settings divs for other methods as needed -->
+
                 <br>
-                <input type="submit" value="Submit"/>
+                <input type="submit" value="Submit" />
             </form>
             <form action="{{ url_for('upload_file') }}" method="GET">
-                <input type="submit" value="Upload a file"/>
+                <input type="submit" value="Upload a file" />
             </form>
-            
         </div>
         <div class="main">
             <div class="graph">
                 {% if image_string_time_domain %}
-                    <img src="data:image/svg+xml;base64,{{image_string_time_domain}}">
+                <img src="data:image/svg+xml;base64,{{image_string_time_domain}}">
                 {% endif %}
             </div>
             <div class="graph">
                 {% if image_string_stft %}
-                    <img src="data:image/svg+xml;base64,{{image_string_stft}}">
+                <img src="data:image/svg+xml;base64,{{image_string_stft}}">
                 {% endif %}
             </div>
             <div class="graph">
                 {% if image_string_fcwt %}
-                    <img src="data:image/svg+xml;base64,{{image_string_fcwt}}">
+                <img src="data:image/svg+xml;base64,{{image_string_fcwt}}">
                 {% endif %}
             </div>
             <div class="graph">
                 {% if image_string_fft %}
-                    <img src="data:image/svg+xml;base64,{{image_string_fft}}">
+                <img src="data:image/svg+xml;base64,{{image_string_fft}}">
                 {% endif %}
-            </div>            
+            </div>
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/nouislider@14.6.3/distribute/nouislider.min.js"></script>
+    <script>
+
+        function initializeSliders(sliderConfigs) {
+            sliderConfigs.forEach(function (config) {
+                var slider = document.getElementById(config.id);
+                noUiSlider.create(slider, {
+                    start: config.startValue,
+                    connect: config.singleValue ? [true, false] : true,
+                    range: {
+                        'min': config.range[0],
+                        'max': config.range[1]
+                    }
+                });
+
+                slider.noUiSlider.on('update', function (values) {
+                    var value = config.singleValue ? values[0] : values.join(',');
+                    document.getElementById(config.id + '_value').value = value;
+                    document.getElementById(config.id + '_display').innerText = value;
+                });
+            });
+        }
+
+
+        var xlim_td_var = {{ xlim_td | safe }};
+        var ylim_td_var = {{ ylim_td | safe }};
+        var xlim_stft_var = {{ xlim_stft | safe }};
+        var ylim_stft_var = {{ ylim_stft | safe }};
+        var clim_stft_var = {{ clim_stft | safe }};
+        var nfft_stft_var = {{ nfft_stft | safe }};
+        var hop_length_stft_var = {{ hop_length_stft | safe }};
+        var xlim_fcwt_var = {{ xlim_fcwt | safe }};
+        var ylim_fcwt_var = {{ ylim_fcwt | safe }};
+        var clim_fcwt_var = {{ clim_fcwt | safe }};
+        var f1_fcwt_var = {{ f1_fcwt | safe }};
+        var xlim_fft_var = {{ xlim_fft | safe }};
+        var ylim_fft_var = {{ ylim_fft | safe }};
+
+
+        var sliderConfigs = [
+            { id: 'time_domain_xlim', startValue: xlim_td_var, range: xlim_td_var, singleValue: false },
+            { id: 'time_domain_ylim', startValue: ylim_td_var, range: ylim_td_var, singleValue: false },
+            { id: 'stft_xlim', startValue: xlim_stft_var, range: xlim_stft_var, singleValue: false },
+            { id: 'stft_ylim', startValue: ylim_stft_var, range: ylim_stft_var, singleValue: false },
+            { id: 'stft_cbar_lim', startValue: clim_stft_var, range: clim_stft_var, singleValue: false },
+            { id: 'stft_n_fft', startValue: nfft_stft_var, range: [1, nfft_stft_var*10], singleValue: true },
+            { id: 'stft_hop_length', startValue: hop_length_stft_var, range: [1, hop_length_stft_var*10], singleValue: true },
+            { id: 'fcwt_f0_f1', startValue: [1, f1_fcwt_var], range: [0, f1_fcwt_var], singleValue: false },
+            { id: 'fcwt_xlim', startValue: xlim_fcwt_var, range: xlim_fcwt_var, singleValue: false },
+            { id: 'fcwt_ylim', startValue: ylim_fcwt_var, range: ylim_fcwt_var, singleValue: false },
+            { id: 'fcwt_clim', startValue: clim_fcwt_var, range: clim_fcwt_var, singleValue: false },
+            { id: 'fcwt_fn', startValue: f1_fcwt_var, range: [0, 100], singleValue: true },
+            { id: 'fcwt_mor_size', startValue: 5, range: [0, 50], singleValue: true },
+            { id: 'fft_xlim', startValue: xlim_fft_var, range: xlim_fft_var, singleValue: false },
+            { id: 'fft_ylim', startValue: ylim_fft_var, range: ylim_fft_var, singleValue: false },
+        ];
+
+        initializeSliders(sliderConfigs);
+
+
+
+
+    </script>
 </body>
+
 </html>
