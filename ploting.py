@@ -46,6 +46,8 @@ def plot_td(path_to_file, xlim=None, ylim=None):
     # Set the x and y labels
     ax.set_xlabel('Time (s)')
     ax.set_ylabel('Amplitude')
+    # Set the title
+    ax.set_title('Time Domain')
 
     # Set default xlim and ylim if not provided
     if not xlim:
@@ -159,6 +161,8 @@ def plot_stft(path_to_file, n_fft=None, hop_length=None, xlim=None, ylim=None, c
     # Set the x and y labels
     ax.set_xlabel("Time (s)")
     ax.set_ylabel("Frequency (Hz)")
+    # Set the title
+    ax.set_title("STFT")
 
     # Use the original or provided xlim and ylim
     xlim = xlim or og_xlim
@@ -242,6 +246,8 @@ def plot_fcwt(path_to_file, f0=None, f1=None, fn=None, mor_size=None, xlim=None,
     # Set the x and y labels
     ax.set_xlabel('Time (s)')
     ax.set_ylabel('Frequency (Hz)')
+    # Set the title
+    ax.set_title('CWT')
 
     # Get the original xlim and ylim
     og_xlim = ax.get_xlim()
@@ -309,6 +315,8 @@ def plot_fft(path_to_file, xlim=None, ylim=None):
     # Set the x and y labels
     ax.set_xlabel('Frequency (Hz)')
     ax.set_ylabel('Amplitude')
+    # Set the title
+    ax.set_title('FFT')
 
     # Get the original xlim and ylim
     og_xlim = ax.get_xlim()
@@ -344,117 +352,3 @@ def plot_fft(path_to_file, xlim=None, ylim=None):
     return result
 
 
-
-# def plot_cwt(path_to_file, channel=0, wavelet='morl', scales=np.arange(1, 10000,100), dpi=100, xlim=None, ylim=None, cbar_lim=None):
-#     # Get the sample rate and data from the WAV object
-#     sample_rate, data = x2w(path_to_file)
-
-#     print(sample_rate)
-
-#     # If the data array is one-dimensional, set data_channel to data
-#     if data.ndim == 1:
-#         data_channel = data
-#     # Otherwise, extract the specified channel from the data array
-#     else:
-#         data_channel = data[:, channel]
-
-#     # Compute the CWT of the data
-#     coefs, freqs = pywt.cwt(data_channel, scales, wavelet)
-
-#     # Calculate the original xlim, ylim, and cbar_lim
-#     original_xlim = [0, len(data_channel) / float(sample_rate)]
-#     original_ylim = [freqs[0], freqs[-1]]
-#     original_cbar_lim = [np.abs(coefs).min(), np.abs(coefs).max()]
-
-#     # Create a figure and plot the CWT
-#     fig, ax = plt.subplots(figsize=(10, 6))
-#     fig.set_dpi(dpi)
-
-#     # Use the original or provided cbar_lim for the color map
-#     cbar_lim = cbar_lim or original_cbar_lim
-#     cwt_img = ax.imshow(np.abs(coefs), extent=[0, len(data_channel) / float(sample_rate), freqs[-1], freqs[0]], cmap='viridis', aspect='auto', vmin=cbar_lim[0], vmax=cbar_lim[1])
-
-#     # Set the x and y labels
-#     ax.set_xlabel('Time (seconds)')
-#     ax.set_ylabel('Frequency (Hz)')
-
-#     # Use the original or provided xlim and ylim
-#     xlim = xlim or original_xlim
-#     ylim = ylim or original_ylim
-#     ax.set_xlim(xlim)
-#     ax.set_ylim(ylim)
-
-#     # Set the colorbar
-#     fig.colorbar(cwt_img, ax=ax)
-
-#     plt.tight_layout()
-
-#     # Convert the plot to a BytesIO object
-#     buf = io.BytesIO()
-#     plt.savefig(buf, format='svg', dpi=dpi)
-#     plt.close(fig)
-
-#     # Reset the buffer's position to the start
-#     buf.seek(0)
-
-#     # Return the BytesIO object along with the original xlim, ylim, and cbar_lim values
-#     return buf, original_xlim, original_ylim, original_cbar_lim
-
-
-# import os
-# from pathlib import Path
-
-# # Define the input file path and output folder
-# input_file = Path('/home/szymon/coding/MSI_Project/uploads/audiocheck.net_sweep_10Hz_22000Hz_-3dBFS_10s.wav') 
-
-# output_folder = 'output_plots'
-
-# # Load the WAV file
-# sample_rate, data = x2w(input_file)
-
-
-
-# # Plot the time domain waveform and save the plot to a file
-# time_plot_file = os.path.join(output_folder, 'time_domain.svg')
-# time_plot, xlim, ylim = plot_time_domain((sample_rate, data))
-# print(xlim)
-# print(ylim)
-# with open(time_plot_file, 'wb') as f:
-#     f.write(time_plot.getbuffer())
-
-# # Plot the frequency domain spectrogram and save the plot to a file
-# freq_plot_file = os.path.join(output_folder, 'frequency_domain.svg')
-# freq_plot, xlim, ylim, clim = plot_frequency_domain((sample_rate, data))
-# print(xlim)
-# print(ylim)
-# print(clim)
-# with open(freq_plot_file, 'wb') as f:
-#     f.write(freq_plot.getbuffer())
-
-# # Plot the CWT and save the plot to a file
-# cwt_plot_file = os.path.join(output_folder, 'cwt.svg')
-# cwt_plot, xlim, ylim, clim  = plot_cwt(input_file)
-# print(xlim)
-# print(ylim)
-# print(clim)
-# with open(cwt_plot_file, 'wb') as f:
-#     f.write(cwt_plot.getbuffer())
-
-
-# # Plot the FCWT and save the plot to a file
-# fcwt_plot_file = os.path.join(output_folder, 'fcwt.svg')
-# fcwt_plot, xlim, ylim, clim  = plot_fcwt((sample_rate, data), dpi=100)
-# print(xlim)
-# print(ylim)
-# print(clim)
-# with open(fcwt_plot_file, 'wb') as f:
-#     f.write(fcwt_plot.getbuffer())
-
-
-# # Plot the FFT and save the plot to a file
-# fft_plot_file = os.path.join(output_folder, 'fft.svg')
-# fft_plot, xlim, ylim = plot_fft((sample_rate, data), dpi=100)
-# print(xlim)
-# print(ylim)
-# with open(fft_plot_file, 'wb') as f:
-#     f.write(fft_plot.getbuffer())
